@@ -107,8 +107,12 @@ $(function() {
 
         $(window).on("mousemove", function (event) {
             if(position == 1){
-                mouse.x = (event.clientX / window.innerWidth) * 3 - 2.1;
+                let windowWidth = $(window).width()/1000;
+                let windowIntersectionPointOffset = -0.228*windowWidth+2.548;
+
+                mouse.x = (event.clientX / window.innerWidth) * 3 - windowIntersectionPointOffset;
                 mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
                 raycaster.setFromCamera(mouse, camera);
                 raycaster.ray.intersectPlane(plane, pointOfIntersection);
                 base.lookAt(pointOfIntersection);
