@@ -11,24 +11,33 @@ let canScroll = true;
 
 $(function() {
 
-    //--------------------Three JS--------------------
+    //--------------------Mobile or Desktop--------------------    
     
+    if(isTouchDevice()){
+        //Trigger animation for all .animate class because it's mobile version
+        $(".animate").addClass("in-viewport");
+        $("#main").addClass("start-scroll").removeClass("stop-scroll");
+        canScroll = false;
+    }
+
+    //--------------------Three JS--------------------
+
     const loadingScreen = $(".loader");
 
-    //if desktop
     if($(window).width() > 768){
         console.log("//--------------------Init of threejs#1--------------------")
         init('.threejs-1', 'animal3.gltf');
-
-    //if mobile/tablet
+    
     }else{
         console.log("//--------------------ThreeJS skipped--------------------")
         //If no threejs, hide loading screen
         loadingScreen.addClass("fade-out");
-        //Trigger animation for all .animate class because it's mobile version
-        $(".animate").addClass("in-viewport");
-        canScroll = false;
+
+        if(!isTouchDevice()){
+            updateAnimation(position);
+        }
     }
+
 
     function init(canvas, model){
         let windowHeight = $(canvas).height();
@@ -147,7 +156,7 @@ $(function() {
         }
     }
 
-    //-------------------------------------------------
+    //--------------------Scroll Animation--------------------
 
     // Define dot size and color array
     const dotSize = 15;
@@ -172,7 +181,7 @@ $(function() {
     // Hide all other menu elements
     hideMenuElements();
 
-    //--------------------Main animator--------------------
+    //Main animator--------------------
     $("body").on("wheel", function (event) {
         if (!isDotAnimating && canScroll) {
             //mettre à false pour supprimer les intervalles entre chaque animation
@@ -268,11 +277,9 @@ $(function() {
             // console.log(`scroll pos: ${position}`);
             // console.log(`dotPos: ${dotPosition}`);
         }
-
-
     });
 
-
+    //Updates section position on click
     $("*[data-dotNumber]").on("click", function () {
         let dotNumber = $(this).attr("data-dotNumber");
         let dotPositionNumber = parseInt($(this).attr("data-dotPosition"));
@@ -296,6 +303,7 @@ $(function() {
             dotDown();
 
             position = dotPositionNumber;
+        //UP
         } else if (dotPositionNumber < position) {
             dotAnimationSize = dotPosition - (dotNumber - 1) * dotSize * 2 + dotSize;
 
@@ -328,6 +336,8 @@ $(function() {
 
         $("#dots").get(0).style.setProperty("--prevDotColor", `${colors[position - 1]}`);
     });
+    
+    //--------------------Réalisations--------------------
 
     $(".moving-list>.card-blue").on({
         "mouseenter": function (){
@@ -353,13 +363,14 @@ $(function() {
             canScroll = false;
         },
         "mouseleave": function(){
-            if($(window).width() > 768){
+            if(!isTouchDevice()){
                 canScroll = true;
             }
         }
     });
     
     //--------------------Notre équipe--------------------
+
     let leftOrRight;
     let currentSliderPosition = 0;
     $(".arrow>i").on("click", function(){

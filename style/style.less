@@ -65,6 +65,17 @@ p{
   overflow-y: hidden;
 }
 
+.start-scroll {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+
+  div[data-position] {
+    position: relative !important;
+    transform: translateY(0) !important;
+  }
+}
+
 .text-orange, .text-orange:hover {
   color: #ff9100;
 }
@@ -1039,17 +1050,14 @@ header {
 }
 
 @media screen and (max-width: 768px){
-  div[data-position] {
-    position: relative !important;
-    transform: translateY(0) !important;
-  }
-  .stop-scroll {
-    overflow-y: visible;
-  } 
-
-  // #dots{
-  //   left: -100vw;
+  // div[data-position] {
+  //   position: relative !important;
+  //   transform: translateY(0) !important;
   // }
+
+  #dots{
+    left: -100vw;
+  }
 
   div:not(.form){
     background-color: transparent !important;
