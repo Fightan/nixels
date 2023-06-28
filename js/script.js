@@ -13,40 +13,32 @@ $(function() {
 
     //--------------------Mobile or Desktop--------------------    
     
-    if(isTouchDevice()){
-        //Trigger animation for all .animate class because it's mobile version
-        $(".animate").addClass("in-viewport");
-        $("#main").addClass("start-scroll").removeClass("stop-scroll");
-        canScroll = false;
-    }
-
-    //--------------------Three JS--------------------
-
-    const loadingScreen = $(".loader");
-
-    if($(window).width() > 768){
-        console.log("//--------------------Init of threejs#1--------------------")
-        init('.threejs-1', 'animal3.gltf');
+    switchTouchScrollMode();
     
-    }else{
-        console.log("//--------------------ThreeJS skipped--------------------")
-        //If no threejs, hide loading screen
-        loadingScreen.addClass("fade-out");
-
-        if(!isTouchDevice()){
-            updateAnimation(position);
-        }
-    }
-
+    //--------------------Three JS--------------------
+    
+    let windowHeight;
+    let windowWidth;
+    let scene;
+    let camera;
+    let renderer;
+    let is3DModelLoaded = false;
+    let is3DAnimating = true;
+    const loadingScreen = $(".loader");
+    
+    $(window).on("resize", onWindowResize);
+    onWindowResize();
 
     function init(canvas, model){
-        let windowHeight = $(canvas).height();
-        let windowWidth = $(canvas).width();
+        console.log("//--------------------Init of threejs#1--------------------")
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(25, windowWidth / windowHeight, 0.1, 100);
+        windowHeight = $(canvas).height();
+        windowWidth = $(canvas).width();
 
-        const renderer = new THREE.WebGLRenderer({
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(25, windowWidth / windowHeight, 0.1, 100);
+
+        renderer = new THREE.WebGLRenderer({
             canvas: document.querySelector(canvas),
             antialias: true,
             alpha: true,
@@ -100,7 +92,7 @@ $(function() {
             base.add(model);
             model.position.setY(-3);
             model.scale.set(2, 2, 2);
-
+            is3DModelLoaded = true;
             console.log("//--------------------Done--------------------");
 
         }, undefined, function (error) {
@@ -113,9 +105,12 @@ $(function() {
         var raycaster = new THREE.Raycaster();
         var mouse = new THREE.Vector2();
         var pointOfIntersection = new THREE.Vector3();
+        var timer;
 
         $(window).on("mousemove", function (event) {
             if(position == 1){
+                is3DAnimating = true;
+
                 let windowWidth = $(window).width()/1000;
                 let windowIntersectionPointOffset = -0.228*windowWidth+2.548;
 
@@ -125,38 +120,29 @@ $(function() {
                 raycaster.setFromCamera(mouse, camera);
                 raycaster.ray.intersectPlane(plane, pointOfIntersection);
                 base.lookAt(pointOfIntersection);
+
+                clearTimeout(timer);
+                timer = setTimeout(stopRender, 100);
             }
         });
 
-        $(window).on("resize", onWindowResize);
-    
-        animate();
-
-        function onWindowResize() {
-            $(".menu").get(0).style.setProperty("--menuHideMargin", (-($(".menu").width() - 204.33) / 6) + "px")
-
-            const width = $(".canvas").width();
-            const height = $(".canvas").height();
-
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            camera.position.setZ((1 - camera.aspect)*65);
-
-            renderer.setSize(width, height);
-
+        function stopRender(){
+            is3DAnimating = false;
         }
-
+        
         function animate() {
             requestAnimationFrame(animate);
-
-            if(position == 1){
+            
+            if(position == 1 && is3DAnimating){
                 renderer.render(scene, camera);
             }
-            
         }
+
+        animate();
     }
 
     //--------------------Scroll Animation--------------------
+
 
     // Define dot size and color array
     const dotSize = 15;
@@ -281,47 +267,49 @@ $(function() {
 
     //Updates section position on click
     $("*[data-dotNumber]").on("click", function () {
-        let dotNumber = $(this).attr("data-dotNumber");
-        let dotPositionNumber = parseInt($(this).attr("data-dotPosition"));
-
-        showHideDot("#dotGray", false);
-        showHideDot("#dotOrange", false);
-
-        hideMenuElements();
-
-
-        //DOWN
-        if (dotPositionNumber > position) {
-            dotAnimationSize = dotSize * (2 * dotNumber - 1) - dotPosition;
-            dotPosition = 2 * dotSize * (dotNumber - 2);
-
-            $("div[data-position=" + (position) + "]").addClass("hideUp").removeClass("showUp").removeClass("showDown");
-            $("div[data-position=" + (dotPositionNumber) + "]").addClass("showUp");
-
-            position = dotPositionNumber - 1;
-
-            dotDown();
-
-            position = dotPositionNumber;
-        //UP
-        } else if (dotPositionNumber < position) {
-            dotAnimationSize = dotPosition - (dotNumber - 1) * dotSize * 2 + dotSize;
-
-            $("div[data-position=" + position + "]").addClass("hideDown").removeClass("showUp").removeClass("showDown");
-            $("div[data-position=" + (dotPositionNumber) + "]").addClass("showDown");
-
-            position = dotPositionNumber + 1;
-
-            dotUp();
-
-            dotPosition = (dotNumber - 1) * dotSize * 2;
-
-            position = dotPositionNumber;
-
+        if(!isTouchDevice()){
+            let dotNumber = $(this).attr("data-dotNumber");
+            let dotPositionNumber = parseInt($(this).attr("data-dotPosition"));
+    
+            showHideDot("#dotGray", false);
+            showHideDot("#dotOrange", false);
+    
+            hideMenuElements();
+    
+    
+            //DOWN
+            if (dotPositionNumber > position) {
+                dotAnimationSize = dotSize * (2 * dotNumber - 1) - dotPosition;
+                dotPosition = 2 * dotSize * (dotNumber - 2);
+    
+                $("div[data-position=" + (position) + "]").addClass("hideUp").removeClass("showUp").removeClass("showDown");
+                $("div[data-position=" + (dotPositionNumber) + "]").addClass("showUp");
+    
+                position = dotPositionNumber - 1;
+    
+                dotDown();
+    
+                position = dotPositionNumber;
+            //UP
+            } else if (dotPositionNumber < position) {
+                dotAnimationSize = dotPosition - (dotNumber - 1) * dotSize * 2 + dotSize;
+    
+                $("div[data-position=" + position + "]").addClass("hideDown").removeClass("showUp").removeClass("showDown");
+                $("div[data-position=" + (dotPositionNumber) + "]").addClass("showDown");
+    
+                position = dotPositionNumber + 1;
+    
+                dotUp();
+    
+                dotPosition = (dotNumber - 1) * dotSize * 2;
+    
+                position = dotPositionNumber;
+    
+            }
+    
+            updateMenuElement();
+            updateAnimation(position);
         }
-
-        updateMenuElement();
-        updateAnimation(position);
     });
 
     $("div[data-position]").on("animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd", function () {
@@ -397,7 +385,7 @@ $(function() {
     });
     
     //Change contact form background on double click
-    $("div[data-position='7'").on("dblclick", function(){
+    $("div[data-position='7']").on("dblclick", function(){
         $(this).css("background-image", "url(./style/images/noBlur.png");
     });
 
@@ -548,6 +536,59 @@ $(function() {
     });
 
     //-----------------------------(⌐■_■)-------------------------------
+
+    function onWindowResize() {
+        $(".menu").get(0).style.setProperty("--menuHideMargin", (-($(".menu").width() - 204.33) / 6) + "px")
+
+        skipOrInit3D();
+        if(is3DModelLoaded){
+            is3DAnimating = true;
+
+            const width = $(".canvas").width();
+            const height = $(".canvas").height();
+    
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            camera.position.setZ((1 - camera.aspect)*65);
+    
+            renderer.setSize(width, height);
+
+        }
+
+        switchTouchScrollMode();
+    }
+
+    function skipOrInit3D(){
+        if(!is3DModelLoaded){
+            if($(window).width() >= 992){
+                init('.threejs-1', 'animal3.gltf');
+            }else{
+                console.log("//--------------------ThreeJS skipped--------------------")
+                //If no threejs, hide loading screen
+                loadingScreen.addClass("fade-out");
+    
+                if(!isTouchDevice()){
+                    updateAnimation(position);
+                }
+            }
+        }
+    }
+
+    function switchTouchScrollMode(){
+        if(isTouchDevice()){
+            //Trigger animation for all .animate class because it's mobile version
+            $(".animate").addClass("in-viewport");
+            $("#main").addClass("start-scroll").removeClass("stop-scroll");
+            canScroll = false;
+            console.log("is touch device");
+        }else{
+            console.log("no touch device");
+            $(".animate").removeClass("in-viewport");
+            $("#main").removeClass("start-scroll").addClass("stop-scroll");
+            canScroll = true;
+            updateAnimation(position);
+        }
+    }
 
     function isTouchDevice() {
         return (('ontouchstart' in window)
