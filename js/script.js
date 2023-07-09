@@ -578,14 +578,26 @@ $(function() {
         if(isTouchDevice()){
             //Trigger animation for all .animate class because it's mobile version
             $(".animate").addClass("in-viewport");
+
             $("#main").addClass("start-scroll").removeClass("stop-scroll");
+            
             canScroll = false;
-            console.log("is touch device");
+
+            $(".button-orange>a").attr("href", "#data-position-2");
+            $(".button-green>a").attr("href", "#data-position-7");
+
         }else{
-            console.log("no touch device");
             $(".animate").removeClass("in-viewport");
+
             $("#main").removeClass("start-scroll").addClass("stop-scroll");
+
             canScroll = true;
+
+
+            $(".button-orange").removeAttr("href");
+            $(".button-green").removeAttr("href");
+
+
             updateAnimation(position);
         }
     }
